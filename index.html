@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CleanFrame – Remove image metadata</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="layout">
+    <aside class="intro">
+      <div class="brand">
+        <svg width="30" height="30" viewBox="0 0 28 28" aria-hidden="true">
+          <rect x="1" y="1" width="26" height="26" rx="8" fill="var(--sky)" />
+          <path d="M8 11V8h3M20 11V8h-3M8 17v3h3M20 17v3h-3" stroke="var(--navy)" stroke-width="2" stroke-linecap="round" fill="none" />
+          <circle cx="14" cy="14" r="2.4" fill="var(--navy)" />
+        </svg>
+        <span>CleanFrame</span>
+      </div>
+
+      <div class="pitch">
+        <h1>Clean photos.<br />No hidden tags.</h1>
+        <p>
+          Image files can carry extra information inside them. CleanFrame
+          removes it in seconds, right in your browser.
+        </p>
+        <ul>
+          <li>Location and camera details (EXIF)</li>
+          <li>Editing software tags (XMP / IPTC)</li>
+          <li>Content Credentials (C2PA)</li>
+        </ul>
+      </div>
+
+      <p class="privacy">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3 5 6v5c0 4.5 3 8.4 7 10 4-1.6 7-5.5 7-10V6l-7-3Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="m9 12 2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Your image never leaves your device. No upload, no server.
+      </p>
+    </aside>
+
+    <main class="stage">
+      <div class="card">
+        <label class="drop" id="drop">
+          <input id="input" type="file" accept="image/jpeg,image/png,image/webp" />
+          <span class="drop-icon">
+            <svg width="30" height="30" viewBox="0 0 44 44" fill="none" aria-hidden="true">
+              <path d="M22 30V14m0 0-7 7m7-7 7 7M10 34h24" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </span>
+          <strong>Drop a photo here</strong>
+          <span class="sub">or click to choose a file. JPG, PNG, or WebP up to 15 MB.</span>
+        </label>
+
+        <div class="work" id="work" hidden>
+          <div class="preview" id="preview">
+            <img id="img" alt="Your photo" />
+            <span class="scan" id="scan" hidden></span>
+            <span class="badge" id="badge" hidden>Cleaned</span>
+          </div>
+
+          <p class="fileline">
+            <span class="name" id="fname"></span>
+            <span id="fsize"></span>
+          </p>
+
+          <div class="chips" id="chips"></div>
+          <p class="success" id="success" hidden>Metadata removed. Your file is ready to download.</p>
+
+          <div class="actions">
+            <button class="btn primary" id="cleanBtn">Remove metadata</button>
+            <a class="btn primary" id="dlBtn" hidden>Download cleaned image</a>
+            <button class="btn ghost" id="resetBtn">Choose a different photo</button>
+          </div>
+        </div>
+
+        <p class="error" id="error" role="alert" hidden></p>
+      </div>
+
+      <p class="note">
+        CleanFrame removes metadata stored in the file. It can&rsquo;t remove invisible
+        watermarks built into the pixels, and platforms may still apply their own detection.
+        Please don&rsquo;t use it to present AI-generated images as real photos.
+      </p>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
