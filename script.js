@@ -10,7 +10,10 @@
   const success = $("success"), errorEl = $("error");
   const cleanBtn = $("cleanBtn"), dlBtn = $("dlBtn"), resetBtn = $("resetBtn");
 
-  let file = null, previewUrl = null, resultUrl = null;
+  let fileType = "", file = null, previewUrl = null, resultUrl = null;
+
+  const EXT_TYPES = { jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp" };
+  const typeOf = (f) => ACCEPTED.includes(f.type) ? f.type : (EXT_TYPES[(f.name.split(".").pop() || "").toLowerCase()] || "");
 
   const formatSize = (b) =>
     b < 1024 * 1024 ? `${Math.round(b / 1024)} KB` : `${(b / 1024 / 1024).toFixed(2)} MB`;
@@ -64,10 +67,12 @@
 
   async function handleFile(f) {
     if (!f) return;
-    if (!ACCEPTED.includes(f.type)) return showError("Use a JPG, PNG, or WebP image.");
+    const type = typeOf(f);
+    if (!type) return showError("Use a JPG, PNG, or WebP image. (HEIC/AVIF are not supported.)");
     if (f.size > MAX_BYTES) return showError("This file is over 15 MB. Choose a smaller image.");
     reset();
     file = f;
+    fileType = type;
     previewUrl = URL.createObjectURL(f);
     img.src = previewUrl;
     fname.textContent = f.name;
@@ -85,17 +90,28 @@
     cleanBtn.textContent = "Cleaning…";
     scan.hidden = false;
     try {
-      const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+      let bitmap;
+      try {
+        bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+      } catch {
+        bitmap = await new Promise((res, rej) => {
+          const im = new Image();
+          im.onload = () => res(im);
+          im.onerror = () => rej(new Error("decode"));
+          im.src = previewUrl;
+        });
+      }
+      const w = bitmap.width || bitmap.naturalWidth, h = bitmap.height || bitmap.naturalHeight;
       const canvas = document.createElement("canvas");
-      canvas.width = bitmap.width;
-      canvas.height = bitmap.height;
+      canvas.width = w;
+      canvas.height = h;
       const ctx = canvas.getContext("2d");
-      if (file.type === "image/jpeg") { ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, canvas.width, canvas.height); }
-      ctx.drawImage(bitmap, 0, 0);
+      if (fileType === "image/jpeg") { ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, w, h); }
+      ctx.drawImage(bitmap, 0, 0, w, h);
       bitmap.close?.();
 
       const blob = await new Promise((res, rej) =>
-        canvas.toBlob((b) => (b ? res(b) : rej(new Error("Export failed"))), file.type, QUALITY)
+        canvas.toBlob((b) => (b ? res(b) : rej(new Error("Export failed"))), fileType, QUALITY)
       );
       // Small pause so the scan animation is visible
       await new Promise((r) => setTimeout(r, 700));
@@ -106,7 +122,7 @@
       fsize.textContent = `${formatSize(file.size)} → ${formatSize(blob.size)}`;
       renderChips(before, true);
 
-      const ext = file.type.split("/")[1].replace("jpeg", "jpg");
+      const ext = fileType.split("/")[1].replace("jpeg", "jpg");
       dlBtn.href = resultUrl;
       dlBtn.download = `clean-${file.name.replace(/\.[^.]+$/, "")}.${ext}`;
 
@@ -132,6 +148,12 @@
     drop.classList.remove("is-dragging");
     handleFile(e.dataTransfer.files?.[0]);
   });
+  ["dragover", "drop"].forEach((ev) =>
+    window.addEventListener(ev, (e) => {
+      e.preventDefault();
+      if (ev === "drop" && !drop.contains(e.target)) handleFile(e.dataTransfer?.files?.[0]);
+    })
+  );
   cleanBtn.addEventListener("click", clean);
   resetBtn.addEventListener("click", reset);
 })();
